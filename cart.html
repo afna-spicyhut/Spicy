@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spicy Hut | Your Cart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* General Styles */
+    body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+    .navbar { background: #333; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .navbar a { color: white; text-decoration: none; margin-left: 15px; }
+    .active { font-weight: bold; border-bottom: 2px solid #ff4d30; }
+    
+    .cart-container {
+      max-width: 800px;
+      margin: 50px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      color: #333;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid #ddd;
+    }
+    .cart-total {
+      text-align: right;
+      font-size: 24px;
+      margin-top: 20px;
+      color: #b30000;
+      font-weight: bold;
+    }
+    .checkout-btn, .print-btn {
+      display: block;
+      width: 100%;
+      text-align: center;
+      padding: 15px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-top: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+    .checkout-btn { background: #ff4d30; color: white; }
+    .print-btn { background: #333; color: white; }
+    .empty-msg { text-align: center; padding: 40px; }
+
+    /* PRINT STYLES - This handles the bill layout */
+    @media print {
+      body { background: white; }
+      .navbar, .checkout-btn, .print-btn, .remove-btn { display: none !important; }
+      .cart-container { margin: 0; padding: 10px; width: 100%; box-shadow: none; }
+      
+      /* Adding a Header for the Printout */
+      .cart-container::before {
+        content: "SPICY HUT - TAX INVOICE";
+        display: block;
+        text-align: center;
+        font-size: 24px;
+        margin-bottom: 10px;
+        border-bottom: 2px solid #000;
+      }
+      .cart-container::after {
+        content: "Thank you for dining with us!";
+        display: block;
+        text-align: center;
+        margin-top: 30px;
+        font-style: italic;
+      }
+}
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <h1 class="logo">Spicy Hut</h1>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="menu.html">Menu</a>
+      <a href="offers.html">Offers</a>
+      <a href="cart.html" class="active">Cart</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </header>
+
+  <div class="cart-container">
+    <h2>Your Food Cart</h2>
+    <div id="cart-items">
+      </div>
+    
+    <div id="cart-summary">
+      <div class="cart-total" id="total-price">Total: Rs. 0</div>
+      <button onclick="printBill()" class="print-btn">Print Bill</button>
+</button>
+
+      <button onclick="sendWhatsApp()" class="checkout-btn">
+  Send Bill via WhatsApp</button>
+  
+      <button class="checkout-btn" onclick="processOrder()">Proceed to Checkout</button>
+    </div>
+  </div>
+
+  <script>
+    function displayCart() {
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      const container = document.getElementById('cart-items');
+      const totalEl = document.getElementById('total-price');
+      let total = 0;
+
+      if (cart.length === 0) {
+        container.innerHTML = '<p class="empty-msg">Your cart is empty. Go get some spicy food!</p>';
+        document.getElementById('cart-summary').style.display = 'none';
+        return;
+      } else {
+        document.getElementById('cart-summary').style.display = 'block';
+      }
+
+      container.innerHTML = cart.map((item, index) => {
+        total += item.price;
+        return `
+          <div class="cart-item">
+            <div>
+              <h4 style="margin:0;">${item.name}</h4>
+              <small>Rs. ${item.price}</small>
+            </div>
+            <button class="remove-btn" onclick="removeItem(${index})" style="background:#ff4d30; color:white; border:none; padding:5px 10px; border-radius:3px; cursor:pointer;">Remove</button>
+          </div>
+        `;
+      }).join('');
+
+      totalEl.innerText = `Total: Rs. ${total}`;
+    }
+
+    function removeItem(index) {
+      let cart = JSON.parse(localStorage.getItem('cart'));
+      cart.splice(index, 1);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      displayCart();
+    }
+
+    function processOrder() {
+      alert('Order Placed Successfully!');
+      // Optional: Clear cart after order
+      // localStorage.removeItem('cart');
+      // displayCart();
+    }
+
+    // Initialize the cart display on page load
+    displayCart();
+function printBill() {
+    window.print();
+
+}
+function sendWhatsApp() {
+  const cart = JSON.parse(localStorage.getItem('cart')) || [];
+  if (cart.length === 0) {
+    alert("Cart is empty");
+    return;
+  }
+
+  let total = 0;
+
+  // Bill info
+  const billNo = "SH-" + Date.now();
+  const dateTime = new Date().toLocaleString();
+
+  let message =
+`🧾 *SPICY HUT - TAX INVOICE*
+────────────────────
+Bill No : ${billNo}
+Date    : ${dateTime}
+
+📍 Spicy Hut, Main Street, Colombo
+📞 +94 77 123 4567
+────────────────────
+ITEMS
+────────────────────
+`;
+
+  cart.forEach((item, i) => {
+    message += `${i + 1}. ${item.name}\n   Rs. ${item.price}\n`;
+    total += item.price;
+  });
+
+  message +=
+`────────────────────
+💰 TOTAL : Rs. ${total}
+────────────────────
+Thank you for dining with us 🙏
+Please visit again ❤️`;
+
+  let phoneNumber = "94768466479"; // 🔴 CHANGE TO YOUR WHATSAPP NUMBER
+  let url = "https://wa.me/" + phoneNumber + "?text=" + encodeURIComponent(message);
+
+  window.open(url, "_blank");
+
+}
+  </script>
+</body>
+</html>
